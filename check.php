@@ -6,7 +6,6 @@
     $comment = htmlentities($comment, ENT_QUOTES, "UTF-8");
 
     if($name == "" || $comment == "") {
-        echo "<script>alert('未入力の箇所があります。');</script>";
         header('Location: index.php');
         exit();
     }

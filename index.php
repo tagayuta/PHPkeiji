@@ -6,9 +6,6 @@
     if ("POST" == $_SERVER['REQUEST_METHOD']) {
         $name2 = $_POST['name2'];
         $comment2 = $_POST['comment2'];
-        if($name2 == "" || $comment2 == "") {
-            echo "<script>alert('未入力の箇所があります。');</script>";
-        }
         
         try {
             $db = new PDO($dns, $user, $pass);
@@ -91,10 +88,6 @@
             <?php endforeach;?>
         </div>
     </div>
-    
-    
-    
-    
 </body>
 </html>
 
