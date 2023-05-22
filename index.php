@@ -1,63 +1,93 @@
 <?php
-if ("POST" == $_Server["REQUEST_METHOD"]) {
-    $name = $_POST["name"];
-    $comment = $_POST["comment"];
-
-    if($name == "" || $comment == "") {
-        echo "<script>alert('未入力の箇所があります。');</script>";
-    }
-
-    $name = htmlentities($name, ENT_QUOTES, "UTF-8");
-    $name = htmlentities($comment, ENT_QUOTES, "UTF-8");
-
-    $dns = 'mysql:host=localhost; dbname=testsystem; charset=uth8';
+    $dns = 'mysql:host=localhost; dbname=testsystem; charaset=utf8';
     $user = 'testuser';
     $pass = 'testpass';
-    try {
+
+    if ("POST" == $_SERVER['REQUEST_METHOD']) {
+        $name2 = $_POST['name2'];
+        $comment2 = $_POST['comment2'];
+        
+        try {
+            $db = new PDO($dns, $user, $pass);
+            $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+            $insertSQL = "INSERT INTO keiji(name, comment) VALUES(?, ?)";
+            $selectSQL = "SELECT * FROM keiji";
+
+            $stmt = $db->prepare($insertSQL);
+            $stmt->bindParam(1, $name2);
+            $stmt->bindParam(2, $comment2);
+            $stmt->execute();
+
+            $stmt = $db->prepare($selectSQL);
+            $stmt->execute();
+        } catch(PDOException $e) {
+            echo "アクセスできませんでした";
+            echo $e->getMessage();
+        }
+    } else {
         $db = new PDO($dns, $user, $pass);
         $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-        $insertSQL = "INSERT INTO testuset(name, comment) VALUES(?, ?)";
         $selectSQL = "SELECT * FROM keiji";
-
-        $stmt = $db->prepare($insertSQL);
-        $data = array($name, $comment);
-        $stmt->execute($data);
-
         $stmt = $db->prepare($selectSQL);
         $stmt->execute();
-    } catch(PDOException $e) {
-        echo "アクセスできませんでした";
-        echo $e->getMessage();
     }
-}
+    
+    $db = null;
 
-echo <<<_BODY_
+?>
+
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
     <title>掲示板</title>
 </head>
 <body>
-    while($arr = $stmt->fetch()) {
-    <div class="keijiArea">
-        <p>id: $arr['id']</p>
-        <p>投稿者：arr['name']</p>
-        <hr>
-        <p>投稿内容</p>
-        <p>$arr['comment']</p>
-        <P>時間： arr['time']</p>
+    <div class="container">
+        <h1 class="title">みんなの掲示板！！</h1>
+        <div class="formArea">
+            <form action="check.php" method="post">
+                <ul>
+                    <li>
+                        <label for="name">名前</label>
+                        <input type="text" name="name" placeholder="名前" class="name">
+                    </li>
+                    <li>
+                        <label for="comment">コメント</label>
+                        <textarea name="comment" cols="50" rows="10" placeholder="コメント"></textarea>
+                    </li>
+                </ul>
+                <input type="submit" value="書き込む" class="btn">
+            </form>
+        </div>
+
+        <div class="keijiArea">
+            <?php foreach($stmt as $arrValue):?>
+                <div class="commentArea">
+                    <p class="number">投稿番号: <?php echo $arrValue['id'] ?></p>
+                    <p class="user">投稿者: <?php echo $arrValue['name'] ?></p>
+                    <p>投稿内容</p>
+                    <p class="comment"><?php echo $arrValue['comment'] ?></p>
+                    <P class="time">時間: <?php echo $arrValue['time'] ?></p>
+                    <div class="forms">
+                    <form action="update.php" method="post">
+                        <input type="hidden" name="updateID" value="<?= $arrValue['id']?>">
+                        <input type="hidden" name="updateComment" value="<?= $arrValue['comment']?>">
+                        <input type="submit" value="編集" class="update">
+                    </form>
+                    <form action="delete.php" method="post">
+                        <input type="hidden" name="delete" value="<?= $arrValue['id']?>">
+                        <input type="submit" value="削除" class="delete">
+                    </form>
+                    </div>
+                    <hr>
+                </div>
+            <?php endforeach;?>
+        </div>
     </div>
-    }
-    <form action="index.php" method="post">
-        <p>名前：<input type="text" name="name"></p>
-        <p>コメント：<input type="text" name="comment"></p>
-        <input type="submit" value="書き込む">
-    </form>
 </body>
 </html>
-_BODY_
-    
-?>
 
